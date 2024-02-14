@@ -1,0 +1,85 @@
+version: '2.3'
+
+services:
+  mysql:
+    restart: always
+    image: mariadb:10.6
+    container_name: project-mysql
+    ports:
+      - "3307:3306"
+    volumes:
+      - /var/log/mysql-docker:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+      - /dumps:/dumps
+    networks:
+      - mysqlnetwork
+    environment:
+      - MYSQL_ROOT_PASSWORD=vG7n4AP9NSCmXNLg
+      - MYSQL_DATABASE=local
+      - MYSQL_USER=developer
+      - MYSQL_PASSWORD=4jyKJfXg2Cwn8ZfR
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=phpmyadmin
+      - PMA_PASSWORD=fRPY5Gq4XkMnnvv9
+      # - TZ=Asia/Seoul
+      - TZ=Asia/Manila
+
+  # redis-server:
+  #   restart: always
+  #   image: redis:4.0
+  #   container_name: project-redis
+  #   command: /bin/bash -c 'redis-server --appendonly yes'
+  #   sysctls:
+  #     - net.core.somaxconn=65535
+  #   ports:
+  #     - "6380:6379"
+  #   volumes:
+  #     - /docker/redis:/data
+  #   networks:
+  #     - mysqlnetwork
+  #   environment:
+      # - TZ=Asia/Seoul
+      # - TZ=Asia/Manila
+
+  nginx-project:
+    container_name: 'NGINX'
+    image: nginx
+    restart: always
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - /var/www/project:/var/www/front
+      # - /var/www/project_admin:/var/www/admin
+    ports:
+      - "80:80"
+      # - "8080:81"
+    links:
+      - php-project:php
+    environment:
+      # - TZ=Asia/Seoul
+      - TZ=Asia/Manila
+
+  php-project:
+    container_name: 'PHP8.1'
+    build: ./php
+    restart: always
+    expose:
+      - "9000"
+    volumes:
+      - /var/www/project:/var/www/front
+      # - /var/www/project_admin:/var/www/admin
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+    environment:
+      # - TZ=Asia/Seoul
+      - TZ=Asia/Manila
+
+volumes:
+  mysql:
+    driver: local
+  # redis:
+  #   driver: local
+networks:
+  mysqlnetwork:
+    driver: bridge
